@@ -21,7 +21,7 @@ lower = alt.Chart(wrangled).mark_bar().encode(
     x = 'sum(minutes):Q',
     y = 'type:N'
 )
-
+ 
 alt.vconcat(upper,lower)
 
 # %% codecell
