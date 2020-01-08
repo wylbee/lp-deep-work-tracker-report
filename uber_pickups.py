@@ -24,12 +24,17 @@ data = load_data(10000)
 # Motify the reader that the data was successfully loaded
 data_load_state.text('Loading data...done!')
 
-st.subheader('Raw data')
-st.write(data)
+if st.checkbox('Show raw data'):
+    st.subheader('Raw data')
+    st.write(data)
 
 st.subheader('Number of pickups by hour')
 hist_values = np.histogram(
     data[date_column].dt.hour, bins=24, range=(0,24))[0]
 st.bar_chart(hist_values)
 
-st.write(hist_values)
+
+hour_to_filter = st.slider('hour', 0, 23, 17)
+filtered_data = data[data[date_column].dt.hour == hour_to_filter]
+st.subheader(f'Map of all pickups at {hour_to_filter}:00')
+st.map(filtered_data)
