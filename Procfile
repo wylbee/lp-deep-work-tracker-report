@@ -1,1 +1,1 @@
-web: sh setup.sh && streamlit run uber_pickups.py
+web: sh setup.sh && streamlit run deep_work_tracker.py
