@@ -16,9 +16,11 @@ heatmap_wrangled = raw.copy()
 heatmap_wrangled = (
     heatmap_wrangled
     .assign(year = pd.DatetimeIndex(heatmap_wrangled['date']).year)
-    .assign(year_week_number = pd.DatetimeIndex(heatmap_wrangled['date']).year + heatmap_wrangled['week_number'])
+    #.assign(year_week_number = pd.DatetimeIndex(heatmap_wrangled['date']).year + heatmap_wrangled['week_number'])
+    .assign(pd_week_number = heatmap_wrangled['date'].dt.strftime('%W'))
 )
-
+#https://strftime.org/
+#https://stackoverflow.com/questions/31181295/converting-a-pandas-date-to-week-number
 year_filter_value = 2020
 heatmap_wrangled_filtered = (
     heatmap_wrangled.copy()
@@ -29,13 +31,13 @@ weekly_dw_goal = 100
 # %%
 base_master_heatmap = alt.Chart(heatmap_wrangled_filtered).transform_joinaggregate(
     sum_minutes = 'sum(minutes):Q',
-    groupby=["week_number"]
+    groupby=["pd_week_number"]
 ).transform_calculate(
     color = 'datum.sum_minutes < 1200 ? "orange" : "blue"'
 )
 
 master_heatmap = base_master_heatmap.mark_rect().encode(
-    alt.X('week_number:O', title='week'),
+    alt.X('pd_week_number:O', title='week'),
     alt.Y('month(date):O', title='month'),
     color= alt.Color('color:N', scale=None),
     tooltip = "sum(minutes):Q"
@@ -57,14 +59,14 @@ alt_heat = alt.Chart(heatmap_wrangled_filtered, title="Another Heatmap").mark_re
 # %%
 
 heatmap = alt.Chart(heatmap_wrangled_filtered).mark_rect().encode(
-    x="year_week_number:O",
+    x="pd_week_number:O",
     y="weekday:O",
     color="minutes:Q",
     tooltip="minutes:Q"
 )
 
 stacked_bar = alt.Chart(heatmap_wrangled_filtered).mark_bar().encode(
-    x="year_week_number:O",
+    x="pd_week_number:O",
     y="sum(minutes):Q",
     color="type",
     tooltip="sum(minutes):Q"
