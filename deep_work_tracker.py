@@ -65,19 +65,12 @@ heatmap = alt.Chart(heatmap_wrangled_filtered).mark_rect().encode(
     tooltip="minutes:Q"
 )
 
-stacked_bar = alt.Chart(heatmap_wrangled_filtered).mark_bar().encode(
-    x="pd_week_number:O",
-    y="sum(minutes):Q",
-    color="type",
-    tooltip="sum(minutes):Q"
-)
+
 
 # %%
 st.altair_chart(master_heatmap, width=0)
 
 st.altair_chart(alt_heat)
-
-st.altair_chart(alt.vconcat(heatmap,stacked_bar), width=0)
 
 # %%
 heatmap_weekday = alt.Chart(heatmap_wrangled_filtered).mark_rect().encode(
@@ -111,7 +104,7 @@ heatmap_weekly_goal = alt.Chart(heatmap_wrangled_filtered).transform_aggregate(
     x=alt.X('year(date):O', axis = None),
     y=alt.Y("pd_week_number:O", axis= None),
     color= alt.condition(
-        alt.datum.total_minutes > 1440,
+        alt.datum.total_minutes > 1000,
         alt.value("steelblue"),
         alt.value("orange")
     ),
@@ -121,7 +114,13 @@ heatmap_weekly_goal = alt.Chart(heatmap_wrangled_filtered).transform_aggregate(
     ]
 )
 
-full_heatmap = alt.HConcatChart(hconcat=(heatmap_weekday, heatmap_weekend, heatmap_weekly_goal), title="Deep work minutes by weekday with goal tracker")
+stacked_bar = alt.Chart(heatmap_wrangled_filtered).mark_bar().encode(
+    y=alt.Y("pd_week_number:O", axis=None),
+    x="sum(minutes):Q",
+    color="type",
+    tooltip="sum(minutes):Q"
+)
 
+full_heatmap = alt.HConcatChart(hconcat=(heatmap_weekday, heatmap_weekend, heatmap_weekly_goal, stacked_bar), title="Deep work minutes by weekday with goal boolean & type breakdown")
 
 st.altair_chart(full_heatmap)
