@@ -80,18 +80,10 @@ st.altair_chart(alt_heat)
 st.altair_chart(alt.vconcat(heatmap,stacked_bar), width=0)
 
 # %%
-base_heatmap = alt.Chart(heatmap_wrangled_filtered).transform_joinaggregate(
-    sum_minutes = 'sum(minutes):Q',
-    groupby=["pd_week_number"]
-).transform_calculate(
-    color = 'datum.sum_minutes < 1200 ? "orange" : "steelblue"'
-)
-
-
 heatmap_weekday = alt.Chart(heatmap_wrangled_filtered).mark_rect().encode(
-    x="weekday:O",
-    y="pd_week_number:O",
-    color= alt.Color('sum(minutes):Q',scale=alt.Scale(scheme="inferno")),
+    x= alt.X("weekday:O", title="Day of Week"),
+    y= alt.Y("pd_week_number:O", title="Week #"),
+    color= alt.Color('sum(minutes):Q',scale=alt.Scale(scheme="warmgreys"), legend=None),
     tooltip=[
         alt.Tooltip('monthdate(date):T', title='Date'),
         alt.Tooltip('sum(minutes):Q', title='Minutes')
@@ -101,9 +93,9 @@ heatmap_weekday = alt.Chart(heatmap_wrangled_filtered).mark_rect().encode(
 )
 
 heatmap_weekend = alt.Chart(heatmap_wrangled_filtered).mark_rect().encode(
-    x="weekday:O",
-    y="pd_week_number:O",
-    color= alt.Color('sum(minutes):Q',scale=alt.Scale(scheme="inferno")),
+    x= alt.X("weekday:O", title=None),
+    y= alt.Y("pd_week_number:O", axis=None),
+    color= alt.Color('sum(minutes):Q',scale=alt.Scale(scheme="warmgreys"), legend=None),
     tooltip=[
         alt.Tooltip('monthdate(date):T', title='Date'),
         alt.Tooltip('sum(minutes):Q', title='Minutes')
@@ -112,21 +104,24 @@ heatmap_weekend = alt.Chart(heatmap_wrangled_filtered).mark_rect().encode(
     alt.FieldOneOfPredicate(field='weekday', oneOf=[6,7])
 )
 
-st.altair_chart(alt.hconcat(heatmap_weekday, heatmap_weekend), width =0)
-
-
-base_master_heatmap = alt.Chart(heatmap_wrangled_filtered).transform_joinaggregate(
-    sum_minutes = 'sum(minutes):Q',
-    groupby=["pd_week_number"]
-).transform_calculate(
-    color = 'datum.sum_minutes < 1200 ? "orange" : "blue"'
+heatmap_weekly_goal = alt.Chart(heatmap_wrangled_filtered).transform_aggregate(
+    total_minutes='sum(minutes)',
+    groupby=['pd_week_number']
+).mark_rect().encode(
+    x=alt.X('year(date):O', axis = None),
+    y=alt.Y("pd_week_number:O", axis= None),
+    color= alt.condition(
+        alt.datum.total_minutes > 1440,
+        alt.value("steelblue"),
+        alt.value("orange")
+    ),
+    tooltip=[
+        alt.Tooltip('sum(minutes):Q'),
+        alt.Tooltip('total_minutes:Q')
+    ]
 )
 
-master_heatmap = base_master_heatmap.mark_rect().encode(
-    alt.X('pd_week_number:O', title='week'),
-    alt.Y('month(date):O', title='month'),
-    color= alt.Color('color:N', scale=None),
-    tooltip = "sum(minutes):Q"
-).properties(
-    title='Deep Work Minutes by Week'
-)
+full_heatmap = alt.HConcatChart(hconcat=(heatmap_weekday, heatmap_weekend, heatmap_weekly_goal), title="Deep work minutes by weekday with goal tracker")
+
+
+st.altair_chart(full_heatmap)
