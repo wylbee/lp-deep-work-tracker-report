@@ -6,7 +6,7 @@ import altair as alt
 # %%
 st.title("Deep Work Tracker")
 #%%
-raw = pd.read_excel("/home/brown5628/projects/lp-deep-work-tracker-report/deep_work_tracker.xlsx")
+raw = pd.read_excel("deep_work_tracker.xlsx")
 
 # %%
 st.subheader("Graph")
@@ -80,3 +80,53 @@ st.altair_chart(alt_heat)
 st.altair_chart(alt.vconcat(heatmap,stacked_bar), width=0)
 
 # %%
+base_heatmap = alt.Chart(heatmap_wrangled_filtered).transform_joinaggregate(
+    sum_minutes = 'sum(minutes):Q',
+    groupby=["pd_week_number"]
+).transform_calculate(
+    color = 'datum.sum_minutes < 1200 ? "orange" : "steelblue"'
+)
+
+
+heatmap_weekday = alt.Chart(heatmap_wrangled_filtered).mark_rect().encode(
+    x="weekday:O",
+    y="pd_week_number:O",
+    color= alt.Color('sum(minutes):Q',scale=alt.Scale(scheme="inferno")),
+    tooltip=[
+        alt.Tooltip('monthdate(date):T', title='Date'),
+        alt.Tooltip('sum(minutes):Q', title='Minutes')
+    ]
+).transform_filter(
+    alt.FieldOneOfPredicate(field='weekday', oneOf=[1,2,3,4,5])
+)
+
+heatmap_weekend = alt.Chart(heatmap_wrangled_filtered).mark_rect().encode(
+    x="weekday:O",
+    y="pd_week_number:O",
+    color= alt.Color('sum(minutes):Q',scale=alt.Scale(scheme="inferno")),
+    tooltip=[
+        alt.Tooltip('monthdate(date):T', title='Date'),
+        alt.Tooltip('sum(minutes):Q', title='Minutes')
+    ]
+).transform_filter(
+    alt.FieldOneOfPredicate(field='weekday', oneOf=[6,7])
+)
+
+st.altair_chart(alt.hconcat(heatmap_weekday, heatmap_weekend), width =0)
+
+
+base_master_heatmap = alt.Chart(heatmap_wrangled_filtered).transform_joinaggregate(
+    sum_minutes = 'sum(minutes):Q',
+    groupby=["pd_week_number"]
+).transform_calculate(
+    color = 'datum.sum_minutes < 1200 ? "orange" : "blue"'
+)
+
+master_heatmap = base_master_heatmap.mark_rect().encode(
+    alt.X('pd_week_number:O', title='week'),
+    alt.Y('month(date):O', title='month'),
+    color= alt.Color('color:N', scale=None),
+    tooltip = "sum(minutes):Q"
+).properties(
+    title='Deep Work Minutes by Week'
+)
