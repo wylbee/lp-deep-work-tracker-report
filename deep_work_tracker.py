@@ -3,13 +3,9 @@ import streamlit as st
 import pandas as pd 
 import numpy as np 
 import altair as alt 
-# %%
-st.title("Deep Work Tracker")
+
 #%%
 raw = pd.read_excel("deep_work_tracker.xlsx")
-
-# %%
-st.subheader("Graph")
 
 # %% 
 heatmap_wrangled = raw.copy()
@@ -27,53 +23,14 @@ heatmap_wrangled_filtered = (
     .query(f'year=={year_filter_value}')
 )
 
-weekly_dw_goal = 100
-# %%
-base_master_heatmap = alt.Chart(heatmap_wrangled_filtered).transform_joinaggregate(
-    sum_minutes = 'sum(minutes):Q',
-    groupby=["pd_week_number"]
-).transform_calculate(
-    color = 'datum.sum_minutes < 1200 ? "orange" : "blue"'
-)
+growth_goal_minutes = 9 * 60
+bacon_goal_minutes = 5 * 3 * 60
 
-master_heatmap = base_master_heatmap.mark_rect().encode(
-    alt.X('pd_week_number:O', title='week'),
-    alt.Y('month(date):O', title='month'),
-    color= alt.Color('color:N', scale=None),
-    tooltip = "sum(minutes):Q"
-).properties(
-    title='Deep Work Minutes by Week'
-)
+growth_types = ['Professional Development', 'Learning Project', 'Agile Data Science']
+bacon_types = ['Sprint']
 
 # %%
-
-alt_heat = alt.Chart(heatmap_wrangled_filtered, title="Another Heatmap").mark_rect().encode(
-    x='date(date):O',
-    y='month(date):O',
-    color = alt.Color('sum(minutes):Q',scale=alt.Scale(scheme="inferno")),
-    tooltip=[
-        alt.Tooltip('monthdate(date):T', title='Date'),
-        alt.Tooltip('sum(minutes):Q', title='Minutes')
-    ]
-)
-# %%
-
-heatmap = alt.Chart(heatmap_wrangled_filtered).mark_rect().encode(
-    x="pd_week_number:O",
-    y="weekday:O",
-    color="minutes:Q",
-    tooltip="minutes:Q"
-)
-
-
-
-# %%
-st.altair_chart(master_heatmap, width=0)
-
-st.altair_chart(alt_heat)
-
-# %%
-heatmap_weekday = alt.Chart(heatmap_wrangled_filtered).mark_rect().encode(
+heatmap_weekday_growth = alt.Chart(heatmap_wrangled_filtered).mark_rect().encode(
     x= alt.X("weekday:O", title="Day of Week"),
     y= alt.Y("pd_week_number:O", title="Week #"),
     color= alt.Color('sum(minutes):Q',scale=alt.Scale(scheme="warmgreys"), legend=None),
@@ -82,10 +39,12 @@ heatmap_weekday = alt.Chart(heatmap_wrangled_filtered).mark_rect().encode(
         alt.Tooltip('sum(minutes):Q', title='Minutes')
     ]
 ).transform_filter(
-    alt.FieldOneOfPredicate(field='weekday', oneOf=[1,2,3,4,5])
+    alt.FieldOneOfPredicate(field='weekday', oneOf=[1,2,3,4,5]) 
+).transform_filter(
+    alt.FieldOneOfPredicate(field='type', oneOf = growth_types)
 )
 
-heatmap_weekend = alt.Chart(heatmap_wrangled_filtered).mark_rect().encode(
+heatmap_weekend_growth = alt.Chart(heatmap_wrangled_filtered).mark_rect().encode(
     x= alt.X("weekday:O", title=None),
     y= alt.Y("pd_week_number:O", axis=None),
     color= alt.Color('sum(minutes):Q',scale=alt.Scale(scheme="warmgreys"), legend=None),
@@ -95,32 +54,138 @@ heatmap_weekend = alt.Chart(heatmap_wrangled_filtered).mark_rect().encode(
     ]
 ).transform_filter(
     alt.FieldOneOfPredicate(field='weekday', oneOf=[6,7])
+).transform_filter(
+    alt.FieldOneOfPredicate(field='type', oneOf = growth_types)
 )
 
-heatmap_weekly_goal = alt.Chart(heatmap_wrangled_filtered).transform_aggregate(
+heatmap_weekly_goal_growth = alt.Chart(heatmap_wrangled_filtered).transform_filter(
+    alt.FieldOneOfPredicate(field='type', oneOf = growth_types)
+).transform_aggregate(
     total_minutes='sum(minutes)',
     groupby=['pd_week_number']
 ).mark_rect().encode(
-    x=alt.X('year(date):O', axis = None),
+    x=alt.X('year(date):O', axis = alt.Axis(ticks= False, labels = False, title='Goal Met?')),
     y=alt.Y("pd_week_number:O", axis= None),
     color= alt.condition(
-        alt.datum.total_minutes > 1000,
+        alt.datum.total_minutes > growth_goal_minutes,
         alt.value("steelblue"),
         alt.value("orange")
     ),
     tooltip=[
-        alt.Tooltip('sum(minutes):Q'),
-        alt.Tooltip('total_minutes:Q')
+        alt.Tooltip('total_minutes:Q', title = "Total Minutes")
     ]
 )
 
-stacked_bar = alt.Chart(heatmap_wrangled_filtered).mark_bar().encode(
+stacked_bar_growth = alt.Chart(heatmap_wrangled_filtered).mark_bar().encode(
     y=alt.Y("pd_week_number:O", axis=None),
     x="sum(minutes):Q",
     color="type",
     tooltip="sum(minutes):Q"
+).transform_filter(
+    alt.FieldOneOfPredicate(field='type', oneOf = growth_types)
 )
 
-full_heatmap = alt.HConcatChart(hconcat=(heatmap_weekday, heatmap_weekend, heatmap_weekly_goal, stacked_bar), title="Deep work minutes by weekday with goal boolean & type breakdown")
+full_heatmap_growth = alt.HConcatChart(hconcat=(heatmap_weekday_growth, heatmap_weekend_growth, heatmap_weekly_goal_growth, stacked_bar_growth), title="Deep work minutes towards growth goal by week")
 
-st.altair_chart(full_heatmap)
+# %%
+heatmap_weekday_bacon = alt.Chart(heatmap_wrangled_filtered).mark_rect().encode(
+    x= alt.X("weekday:O", title="Day of Week"),
+    y= alt.Y("pd_week_number:O", title="Week #"),
+    color= alt.Color('sum(minutes):Q',scale=alt.Scale(scheme="warmgreys"), legend=None),
+    tooltip=[
+        alt.Tooltip('monthdate(date):T', title='Date'),
+        alt.Tooltip('sum(minutes):Q', title='Minutes')
+    ]
+).transform_filter(
+    alt.FieldOneOfPredicate(field='weekday', oneOf=[1,2,3,4,5]) 
+).transform_filter(
+    alt.FieldOneOfPredicate(field='type', oneOf = bacon_types)
+)
+
+heatmap_weekend_bacon = alt.Chart(heatmap_wrangled_filtered).mark_rect().encode(
+    x= alt.X("weekday:O", title=None),
+    y= alt.Y("pd_week_number:O", axis=None),
+    color= alt.Color('sum(minutes):Q',scale=alt.Scale(scheme="warmgreys"), legend=None),
+    tooltip=[
+        alt.Tooltip('monthdate(date):T', title='Date'),
+        alt.Tooltip('sum(minutes):Q', title='Minutes')
+    ]
+).transform_filter(
+    alt.FieldOneOfPredicate(field='weekday', oneOf=[6,7])
+).transform_filter(
+    alt.FieldOneOfPredicate(field='type', oneOf = bacon_types)
+)
+
+heatmap_weekly_goal_bacon = alt.Chart(heatmap_wrangled_filtered).transform_filter(
+    alt.FieldOneOfPredicate(field='type', oneOf = bacon_types)
+).transform_aggregate(
+    total_minutes='sum(minutes)',
+    groupby=['pd_week_number']
+).mark_rect().encode(
+    x=alt.X('year(date):O', axis = alt.Axis(ticks= False, labels = False, title='Goal Met?')),
+    y=alt.Y("pd_week_number:O", axis = None),
+    color= alt.condition(
+        alt.datum.total_minutes > bacon_goal_minutes,
+        alt.value("steelblue"),
+        alt.value("orange")
+    ),
+    tooltip=[
+        alt.Tooltip('total_minutes:Q', title = "Total Minutes")
+    ]
+)
+
+stacked_bar_bacon = alt.Chart(heatmap_wrangled_filtered).mark_bar().encode(
+    y=alt.Y("pd_week_number:O", axis=None),
+    x="sum(minutes):Q",
+    color= "type",
+    tooltip="sum(minutes):Q"
+).transform_filter(
+    alt.FieldOneOfPredicate(field='type', oneOf = bacon_types)
+)
+
+full_heatmap_bacon = alt.HConcatChart(hconcat=(heatmap_weekday_bacon, heatmap_weekend_bacon, heatmap_weekly_goal_bacon, stacked_bar_bacon), title="Deep work minutes towards professional goal by week")
+
+# %%
+
+heatmap_weekly_goal_growth_with_axis = alt.Chart(heatmap_wrangled_filtered).transform_filter(
+    alt.FieldOneOfPredicate(field='type', oneOf = growth_types)
+).transform_aggregate(
+    total_minutes='sum(minutes)',
+    groupby=['pd_week_number']
+).mark_rect().encode(
+    x=alt.X('year(date):O', axis = alt.Axis(ticks= False, labels = False, title='Goal Met?')),
+    y=alt.Y("pd_week_number:O", title='Week #'),
+    color= alt.condition(
+        alt.datum.total_minutes > growth_goal_minutes,
+        alt.value("steelblue"),
+        alt.value("orange")
+    ),
+    tooltip=[
+        alt.Tooltip('total_minutes:Q', title = "Total Minutes")
+    ]
+)
+
+consolidated_goals = alt.HConcatChart(hconcat=(heatmap_weekly_goal_growth_with_axis,heatmap_weekly_goal_bacon), title= 'Growth & professional goals')
+# %%
+st.title("Deep Work Tracker")
+st.subheader('Overview')
+st.markdown(f"""
+The purpose of this tool is to track the leading indicator of Deep Work minutes against selected goals and allow for exploration of where that time is being spent.
+
+A quick reference for Newport's Deep Work can be found [here](https://doist.com/blog/deep-work/). As defined, Deep Work is:
+>“Professional activity performed in a state of distraction-free concentration that push your cognitive capabilities to their limit. These efforts create new value, improve your skill, and are hard to replicate.”
+
+My weekly goals are as follows:
+* Growth - {growth_goal_minutes/60} hours per week ({growth_goal_minutes} minutes); spent developing skills
+* Professional - {bacon_goal_minutes/60} hours per week ({bacon_goal_minutes} minutes); spent on executing the day job
+
+Current progress is tallied in summary form here, then detailed in the relevant sub-sections below.
+""")
+
+
+st.altair_chart(consolidated_goals)
+
+st.subheader('Growth')
+st.altair_chart(full_heatmap_growth)
+st.subheader('Professional')
+st.altair_chart(full_heatmap_bacon)
