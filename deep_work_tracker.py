@@ -182,7 +182,6 @@ My weekly goals are as follows:
 Current progress is tallied in summary form here, then detailed in the relevant sub-sections below.
 """)
 
-
 st.altair_chart(consolidated_goals)
 
 st.subheader('Growth')
