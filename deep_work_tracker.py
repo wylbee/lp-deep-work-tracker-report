@@ -5,8 +5,9 @@ import numpy as np
 import altair as alt 
 
 #%%
-raw = pd.read_excel("deep_work_tracker.xlsx")
-
+#raw = pd.read_excel("deep_work_tracker.xlsx")
+raw = pd.read_excel("https://onedrive.live.com/download?resid=C419669C76B5EEBA!23877&ithint=file%2cxlsx&authkey=!ACM16COgoBWertc")
+ 
 # %% 
 heatmap_wrangled = raw.copy()
 heatmap_wrangled = (
@@ -235,10 +236,10 @@ st.altair_chart(consolidated_goals)
 
 st.subheader('Growth')
 st.altair_chart(full_heatmap_growth)
-st.altair_chart(cumulative_sum_subtype_growth)
+#st.altair_chart(cumulative_sum_subtype_growth)
 st.subheader('Professional')
 st.altair_chart(full_heatmap_bacon)
-st.altair_chart(cumulative_sum_subtype_bacon)
+#st.altair_chart(cumulative_sum_subtype_bacon)
 
-
-st.write(heatmap_wrangled_filtered_grouped)
+ 
+#st.write(heatmap_wrangled_filtered_grouped)
