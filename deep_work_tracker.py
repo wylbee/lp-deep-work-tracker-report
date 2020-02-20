@@ -95,13 +95,23 @@ heatmap_weekly_goal_growth = alt.Chart(heatmap_wrangled_filtered_grouped).transf
 stacked_bar_growth = alt.Chart(heatmap_wrangled_filtered_grouped).mark_bar().encode(
     y=alt.Y("pd_week_number:O", axis=None),
     x="sum(minutes):Q",
-    color="type",
+    color= alt.Color("type:N",scale=alt.Scale(scheme="pastel1")),
     tooltip="sum(minutes):Q"
 ).transform_filter(
     alt.FieldOneOfPredicate(field='type', oneOf = growth_types)
 )
 
-full_heatmap_growth = alt.HConcatChart(hconcat=(heatmap_weekday_growth, heatmap_weekend_growth, heatmap_weekly_goal_growth, stacked_bar_growth), title="Deep work minutes towards growth goal by week")
+avg_line_growth = alt.Chart(heatmap_wrangled_filtered_grouped).transform_filter(
+    alt.FieldOneOfPredicate(field='type', oneOf = growth_types)
+).transform_aggregate(
+    total_minutes='sum(minutes)',
+    groupby=['pd_week_number']
+).mark_rule(color='purple', opacity = .25).encode(
+    x= 'mean(total_minutes):Q',
+    tooltip = alt.Tooltip("mean(total_minutes):Q")
+)
+
+full_heatmap_growth = alt.HConcatChart(hconcat=(heatmap_weekday_growth, heatmap_weekend_growth, heatmap_weekly_goal_growth, (stacked_bar_growth + avg_line_growth)), title="Deep work minutes towards growth goal by week")
 
 
 # %%
@@ -171,13 +181,23 @@ heatmap_weekly_goal_bacon = alt.Chart(heatmap_wrangled_filtered_grouped).transfo
 stacked_bar_bacon = alt.Chart(heatmap_wrangled_filtered_grouped).mark_bar().encode(
     y=alt.Y("pd_week_number:O", axis=None),
     x="sum(minutes):Q",
-    color= "type",
-    tooltip="sum(minutes):Q"
+    color= alt.Color("type:N",scale=alt.Scale(scheme="pastel2")),
+    tooltip= alt.Tooltip("sum(minutes):Q", title= "Total Minutes")
 ).transform_filter(
     alt.FieldOneOfPredicate(field='type', oneOf = bacon_types)
 )
 
-full_heatmap_bacon = alt.HConcatChart(hconcat=(heatmap_weekday_bacon, heatmap_weekend_bacon, heatmap_weekly_goal_bacon, stacked_bar_bacon), title="Deep work minutes towards professional goal by week")
+avg_line_bacon = alt.Chart(heatmap_wrangled_filtered_grouped).transform_filter(
+    alt.FieldOneOfPredicate(field='type', oneOf = bacon_types)
+).transform_aggregate(
+    total_minutes='sum(minutes)',
+    groupby=['pd_week_number']
+).mark_rule(color='purple', opacity = .25).encode(
+    x= 'mean(total_minutes):Q',
+    tooltip = alt.Tooltip("mean(total_minutes):Q")
+)
+
+full_heatmap_bacon = alt.HConcatChart(hconcat=(heatmap_weekday_bacon, heatmap_weekend_bacon, heatmap_weekly_goal_bacon, (stacked_bar_bacon + avg_line_bacon)), title="Deep work minutes towards professional goal by week")
 
 # %%
 cumulative_sum_subtype_bacon = alt.Chart(heatmap_wrangled_filtered_grouped).transform_filter(
