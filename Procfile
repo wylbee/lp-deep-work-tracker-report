@@ -1,1 +1,1 @@
-web: sh setup.sh && streamlit run deep_work_tracker.py
+web: sleep 10 && touch '/tmp/app-initialized' & bin/start-nginx streamlit run --server.enableCORS false --server.port 8501 deep_work_tracker.py
