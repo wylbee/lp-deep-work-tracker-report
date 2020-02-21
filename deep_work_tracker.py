@@ -5,6 +5,11 @@ import numpy as np
 import altair as alt 
 
 #%%
+growth_goal_minutes = 9 * 60
+bacon_goal_minutes = 5 * 3 * 60
+
+
+# %%
 #raw = pd.read_excel("deep_work_tracker.xlsx")
 raw = pd.read_excel("https://onedrive.live.com/download?resid=C419669C76B5EEBA!23877&ithint=file%2cxlsx&authkey=!ACM16COgoBWertc")
  
@@ -15,6 +20,8 @@ heatmap_wrangled = (
     .assign(year = pd.DatetimeIndex(heatmap_wrangled['date']).year)
     #.assign(year_week_number = pd.DatetimeIndex(heatmap_wrangled['date']).year + heatmap_wrangled['week_number'])
     .assign(pd_week_number = heatmap_wrangled['date'].dt.strftime('%W'))
+    .assign(growth_goal_minutes = growth_goal_minutes)
+    .assign(bacon_goal_minutes = bacon_goal_minutes)
 )
 #https://strftime.org/
 #https://stackoverflow.com/questions/31181295/converting-a-pandas-date-to-week-number
@@ -28,13 +35,12 @@ heatmap_wrangled_filtered = (
 heatmap_wrangled_filtered_grouped = (
     heatmap_wrangled_filtered
     .copy()
-    .groupby(['date','week_number','weekday','type','subtype','year','pd_week_number'])
+    .groupby(['date','week_number','weekday','type','subtype','year','pd_week_number', 'growth_goal_minutes', 'bacon_goal_minutes'])
     .agg({'minutes' : 'sum'})
     .reset_index()
 )
 
-growth_goal_minutes = 9 * 60
-bacon_goal_minutes = 5 * 3 * 60
+
 
 growth_types = ['Professional Development', 'Learning Project', 'Agile Data Science']
 bacon_types = ['Sprint', "Slack"]
@@ -111,7 +117,12 @@ avg_line_growth = alt.Chart(heatmap_wrangled_filtered_grouped).transform_filter(
     tooltip = alt.Tooltip("mean(total_minutes):Q")
 )
 
-full_heatmap_growth = alt.HConcatChart(hconcat=(heatmap_weekday_growth, heatmap_weekend_growth, heatmap_weekly_goal_growth, (stacked_bar_growth + avg_line_growth)), title="Deep work minutes towards growth goal by week")
+goal_line_growth = alt.Chart(heatmap_wrangled_filtered_grouped).mark_rule(color='steelblue', opacity = .3).encode(
+    x = 'growth_goal_minutes:Q'
+)
+
+st.write(goal_line_growth)
+full_heatmap_growth = alt.HConcatChart(hconcat=(heatmap_weekday_growth, heatmap_weekend_growth, heatmap_weekly_goal_growth, (stacked_bar_growth + avg_line_growth + goal_line_growth)), title="Deep work minutes towards growth goal by week")
 
 
 # %%
@@ -197,7 +208,11 @@ avg_line_bacon = alt.Chart(heatmap_wrangled_filtered_grouped).transform_filter(
     tooltip = alt.Tooltip("mean(total_minutes):Q")
 )
 
-full_heatmap_bacon = alt.HConcatChart(hconcat=(heatmap_weekday_bacon, heatmap_weekend_bacon, heatmap_weekly_goal_bacon, (stacked_bar_bacon + avg_line_bacon)), title="Deep work minutes towards professional goal by week")
+goal_line_bacon = alt.Chart(heatmap_wrangled_filtered_grouped).mark_rule(color='steelblue', opacity = .3).encode(
+    x = 'bacon_goal_minutes:Q'
+)
+
+full_heatmap_bacon = alt.HConcatChart(hconcat=(heatmap_weekday_bacon, heatmap_weekend_bacon, heatmap_weekly_goal_bacon, (stacked_bar_bacon + avg_line_bacon + goal_line_bacon)), title="Deep work minutes towards professional goal by week")
 
 # %%
 cumulative_sum_subtype_bacon = alt.Chart(heatmap_wrangled_filtered_grouped).transform_filter(
