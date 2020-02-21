@@ -122,7 +122,7 @@ goal_line_growth = alt.Chart(heatmap_wrangled_filtered_grouped).mark_rule(color=
     x = 'growth_goal_minutes:Q'
 )
 
-st.write(goal_line_growth)
+
 full_heatmap_growth = alt.HConcatChart(hconcat=(heatmap_weekday_growth, heatmap_weekend_growth, heatmap_weekly_goal_growth, (stacked_bar_growth + avg_line_growth + goal_line_growth)), title="Deep work minutes towards growth goal by week")
 
 
