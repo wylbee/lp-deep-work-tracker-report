@@ -39,7 +39,7 @@ heatmap_wrangled_filtered_grouped = (
     .groupby(['date','week_number','weekday','type','subtype','year','pd_week_number', 'growth_goal_minutes', 'bacon_goal_minutes'])
     .agg({'minutes' : 'sum'})
     .reset_index()
-)
+) 
 
 
 
@@ -61,25 +61,25 @@ heatmap_weekday_growth = alt.Chart(heatmap_wrangled_filtered_grouped).mark_rect(
         alt.Tooltip('monthdate(date):T', title='Date'),
         alt.Tooltip('sum(minutes):Q', title='Minutes')
     ]
-).transform_filter(
-    alt.FieldOneOfPredicate(field='weekday', oneOf=[1,2,3,4,5]) 
+#).transform_filter(
+#    alt.FieldOneOfPredicate(field='weekday', oneOf=[1,2,3,4,5]) 
 ).transform_filter(
     alt.FieldOneOfPredicate(field='type', oneOf = growth_types)
 )
 
-heatmap_weekend_growth = alt.Chart(heatmap_wrangled_filtered_grouped).mark_rect().encode(
-    x= alt.X("weekday:O", title=None),
-    y= alt.Y("pd_week_number:O", axis=None),
-    color= alt.Color('sum(minutes):Q',scale=alt.Scale(scheme="warmgreys"), legend=None),
-    tooltip=[
-        alt.Tooltip('monthdate(date):T', title='Date'),
-        alt.Tooltip('sum(minutes):Q', title='Minutes')
-    ]
-).transform_filter(
-    alt.FieldOneOfPredicate(field='weekday', oneOf=[6,7])
-).transform_filter(
-    alt.FieldOneOfPredicate(field='type', oneOf = growth_types)
-)
+#heatmap_weekend_growth = alt.Chart(heatmap_wrangled_filtered_grouped).mark_rect().encode(
+#    x= alt.X("weekday:O", title=None),
+#    y= alt.Y("pd_week_number:O", axis=None),
+#    color= alt.Color('sum(minutes):Q',scale=alt.Scale(scheme="warmgreys"), legend=None),
+#    tooltip=[
+#        alt.Tooltip('monthdate(date):T', title='Date'),
+#        alt.Tooltip('sum(minutes):Q', title='Minutes')
+#    ]
+#).transform_filter(
+#    alt.FieldOneOfPredicate(field='weekday', oneOf=[6,7])
+#).transform_filter(
+#    alt.FieldOneOfPredicate(field='type', oneOf = growth_types)
+#)
 
 heatmap_weekly_goal_growth = alt.Chart(heatmap_wrangled_filtered_grouped).transform_filter(
     alt.FieldOneOfPredicate(field='type', oneOf = growth_types)
@@ -90,7 +90,7 @@ heatmap_weekly_goal_growth = alt.Chart(heatmap_wrangled_filtered_grouped).transf
     x=alt.X('year(date):O', axis = alt.Axis(ticks= False, labels = False, title='Goal Met?')),
     y=alt.Y("pd_week_number:O", axis= None),
     color= alt.condition(
-        alt.datum.total_minutes > growth_goal_minutes,
+        alt.datum.total_minutes >= growth_goal_minutes,
         alt.value("steelblue"),
         alt.value("orange")
     ),
@@ -123,7 +123,7 @@ goal_line_growth = alt.Chart(heatmap_wrangled_filtered_grouped).mark_rule(color=
 )
 
 
-full_heatmap_growth = alt.HConcatChart(hconcat=(heatmap_weekday_growth, heatmap_weekend_growth, heatmap_weekly_goal_growth, (stacked_bar_growth + avg_line_growth + goal_line_growth)), title="Deep work minutes towards growth goal by week")
+full_heatmap_growth = alt.HConcatChart(hconcat=(heatmap_weekday_growth,  heatmap_weekly_goal_growth, (stacked_bar_growth + avg_line_growth + goal_line_growth)), title="Deep work minutes towards growth goal by week")
 
 
 # %%
@@ -152,25 +152,25 @@ heatmap_weekday_bacon = alt.Chart(heatmap_wrangled_filtered_grouped).mark_rect()
         alt.Tooltip('monthdate(date):T', title='Date'),
         alt.Tooltip('sum(minutes):Q', title='Minutes')
     ]
-).transform_filter(
-    alt.FieldOneOfPredicate(field='weekday', oneOf=[1,2,3,4,5]) 
+#).transform_filter(
+#    alt.FieldOneOfPredicate(field='weekday', oneOf=[1,2,3,4,5]) 
 ).transform_filter(
     alt.FieldOneOfPredicate(field='type', oneOf = bacon_types)
 )
 
-heatmap_weekend_bacon = alt.Chart(heatmap_wrangled_filtered_grouped).mark_rect().encode(
-    x= alt.X("weekday:O", title=None),
-    y= alt.Y("pd_week_number:O", axis=None),
-    color= alt.Color('sum(minutes):Q',scale=alt.Scale(scheme="warmgreys"), legend=None),
-    tooltip=[
-        alt.Tooltip('monthdate(date):T', title='Date'),
-        alt.Tooltip('sum(minutes):Q', title='Minutes')
-    ]
-).transform_filter(
-    alt.FieldOneOfPredicate(field='weekday', oneOf=[6,7])
-).transform_filter(
-    alt.FieldOneOfPredicate(field='type', oneOf = bacon_types)
-)
+#heatmap_weekend_bacon = alt.Chart(heatmap_wrangled_filtered_grouped).mark_rect().encode(
+#    x= alt.X("weekday:O", title=None),
+#    y= alt.Y("pd_week_number:O", axis=None),
+#    color= alt.Color('sum(minutes):Q',scale=alt.Scale(scheme="warmgreys"), legend=None),
+#    tooltip=[
+#        alt.Tooltip('monthdate(date):T', title='Date'),
+#        alt.Tooltip('sum(minutes):Q', title='Minutes')
+#    ]
+#).transform_filter(
+#    alt.FieldOneOfPredicate(field='weekday', oneOf=[6,7])
+#).transform_filter(
+#    alt.FieldOneOfPredicate(field='type', oneOf = bacon_types)
+#)
 
 heatmap_weekly_goal_bacon = alt.Chart(heatmap_wrangled_filtered_grouped).transform_filter(
     alt.FieldOneOfPredicate(field='type', oneOf = bacon_types)
@@ -181,7 +181,7 @@ heatmap_weekly_goal_bacon = alt.Chart(heatmap_wrangled_filtered_grouped).transfo
     x=alt.X('year(date):O', axis = alt.Axis(ticks= False, labels = False, title='Goal Met?')),
     y=alt.Y("pd_week_number:O", axis = None),
     color= alt.condition(
-        alt.datum.total_minutes > bacon_goal_minutes,
+        alt.datum.total_minutes >= bacon_goal_minutes,
         alt.value("steelblue"),
         alt.value("orange")
     ),
@@ -213,7 +213,7 @@ goal_line_bacon = alt.Chart(heatmap_wrangled_filtered_grouped).mark_rule(color='
     x = 'bacon_goal_minutes:Q'
 )
 
-full_heatmap_bacon = alt.HConcatChart(hconcat=(heatmap_weekday_bacon, heatmap_weekend_bacon, heatmap_weekly_goal_bacon, (stacked_bar_bacon + avg_line_bacon + goal_line_bacon)), title="Deep work minutes towards professional goal by week")
+full_heatmap_bacon = alt.HConcatChart(hconcat=(heatmap_weekday_bacon, heatmap_weekly_goal_bacon, (stacked_bar_bacon + avg_line_bacon + goal_line_bacon)), title="Deep work minutes towards professional goal by week")
 
 # %%
 cumulative_sum_subtype_bacon = alt.Chart(heatmap_wrangled_filtered_grouped).transform_filter(
