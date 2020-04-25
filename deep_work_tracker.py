@@ -5,8 +5,8 @@ import numpy as np
 import altair as alt 
 
 #%%
-growth_goal_minutes = 9 * 60
-bacon_goal_minutes = 5 * 3 * 60
+growth_goal_minutes = 2 * 4 * 60
+bacon_goal_minutes = 4 * 4 * 60
 
 
 # %%
