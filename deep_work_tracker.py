@@ -36,7 +36,7 @@ def create_df_from_query(sql_query, database=conn):
 raw = create_df_from_query(
     """
     select
-         activity_date as date,
+         activity_date + '00:00:01'::time as date,
          activity_week_number as week_number,
          activity_weekday as weekday,
          activity_type as type,
@@ -54,9 +54,10 @@ conn.close()
 
 # %%
 heatmap_wrangled = raw.copy()
-heatmap_wrangled["date"] = pd.to_datetime(
-    heatmap_wrangled["date"], infer_datetime_format=True
-)
+#heatmap_wrangled["date"] = pd.to_datetime(
+#    heatmap_wrangled["date"], #infer_datetime_format=True, 
+#    utc=False
+#)
 heatmap_wrangled = (
     heatmap_wrangled.assign(year=pd.DatetimeIndex(heatmap_wrangled["date"]).year)
     .assign(pd_week_number=heatmap_wrangled["date"].dt.strftime("%W"))
