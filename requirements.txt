@@ -3,3 +3,4 @@ numpy
 altair
 streamlit
 xlrd
+psycopg2

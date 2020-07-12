@@ -1,24 +1,65 @@
-#%%
+# %%
 import streamlit as st 
 import pandas as pd 
 import numpy as np 
 import altair as alt 
-
-#%%
-growth_goal_minutes = 2 * 3 * 60
-bacon_goal_minutes = 4 * 3 * 60
-
+import psycopg2
+import os
 
 # %%
-#raw = pd.read_excel("deep_work_tracker.xlsx")
-raw = pd.read_excel("https://onedrive.live.com/download?resid=C419669C76B5EEBA!23877&ithint=file%2cxlsx&authkey=!ACM16COgoBWertc")
- 
+growth_goal_minutes = 2 * 3 * 60
+bacon_goal_minutes = 5 * 3 * 60
+
+# %%
+db_host = os.getenv('SWA_DB_HOST')
+db_port = os.getenv('SWA_DB_PORT')
+db_db = os.getenv('SWA_DB_DB')
+db_user = os.getenv('SWA_DB_USER')
+db_pass = os.getenv('SWA_DB_PASS')
+
+# %%
+conn = psycopg2.connect(
+    host=db_host,
+    port=db_port,
+    database=db_db,
+    user=db_user,
+    password=db_pass
+)
+
+cur = conn.cursor()
+
+# %%
+
+
+def create_df_from_query(sql_query, database = conn):
+    df = pd.read_sql_query(sql_query, database)
+    return df 
+
+# %%
+
+raw = create_df_from_query("""
+    select 
+         activity_date as date,
+         activity_week_number as week_number,
+         activity_weekday as weekday,
+         activity_type as type,
+         activity_subtype as subtype,
+         activity_minutes as minutes
+    
+    from mart_quantified_self.fct_deep_work_tracker
+
+""")
+
+# %%
+cur.close()
+conn.close()
+
 # %% 
 heatmap_wrangled = raw.copy()
+heatmap_wrangled['date'] = pd.to_datetime(heatmap_wrangled['date'], infer_datetime_format=True)
 heatmap_wrangled = (
     heatmap_wrangled
     .assign(year = pd.DatetimeIndex(heatmap_wrangled['date']).year)
-    #.assign(year_week_number = pd.DatetimeIndex(heatmap_wrangled['date']).year + heatmap_wrangled['week_number'])
     .assign(pd_week_number = heatmap_wrangled['date'].dt.strftime('%W'))
     .assign(growth_goal_minutes = growth_goal_minutes)
     .assign(bacon_goal_minutes = bacon_goal_minutes)
