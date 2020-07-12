@@ -36,7 +36,7 @@ def create_df_from_query(sql_query, database=conn):
 raw = create_df_from_query(
     """
     select
-         activity_date + '00:00:01'::time as date,
+         activity_date + '05:00:01'::time as date,
          activity_week_number as week_number,
          activity_weekday as weekday,
          activity_type as type,
